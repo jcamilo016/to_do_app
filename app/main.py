@@ -133,6 +133,43 @@ async def update_task_description(id: int, task_update: TaskUpdate) -> Task:
     return updated_task
 
 
+@app.patch(
+    "/tasks/{id}/undone",
+    response_model=Task,
+    status_code=status.HTTP_200_OK,
+    tags=["Tasks"],
+    summary="Mark task as not completed",
+    response_description="The updated task marked as undone"
+)
+async def mark_task_undone(id: int) -> Task:
+    """
+    Mark a task as not completed (undone).
+    
+    This endpoint updates the completion status of a task to False,
+    marking it as not completed. The operation is idempotent, so
+    calling it multiple times on the same task has the same effect
+    as calling it once.
+    
+    Parameters:
+        id (int): The unique identifier of the task to mark as undone.
+    
+    Returns:
+        Task: The updated task with done=False.
+    
+    Raises:
+        HTTPException: 404 error if the task is not found.
+    """
+    updated_task = task_db.mark_task_undone(task_id=id)
+    
+    if updated_task is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Task with id {id} not found"
+        )
+    
+    return updated_task
+
+
 @app.delete(
     "/tasks/{id}",
     status_code=status.HTTP_204_NO_CONTENT,
