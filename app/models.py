@@ -16,6 +16,7 @@ class TaskBase(BaseModel):
     Attributes:
         description (str): A brief description of the task.
         done (bool): Indicates whether the task is completed.
+        agent (Optional[str]): The cloud agent to whom the task is delegated.
     """
     
     description: str = Field(
@@ -27,6 +28,11 @@ class TaskBase(BaseModel):
     done: bool = Field(
         default=False,
         description="Task completion status"
+    )
+    agent: Optional[str] = Field(
+        default=None,
+        max_length=100,
+        description="Cloud agent assigned to this task"
     )
 
 
@@ -56,6 +62,22 @@ class TaskUpdate(BaseModel):
     )
 
 
+class TaskDelegate(BaseModel):
+    """
+    Model for delegating a task to a cloud agent.
+    
+    Attributes:
+        agent (str): The name or identifier of the cloud agent.
+    """
+    
+    agent: str = Field(
+        ...,
+        min_length=1,
+        max_length=100,
+        description="Cloud agent to delegate the task to"
+    )
+
+
 class Task(TaskBase):
     """
     Complete Task model including ID.
@@ -64,6 +86,7 @@ class Task(TaskBase):
         id (int): Unique identifier for the task.
         description (str): Task description.
         done (bool): Task completion status.
+        agent (Optional[str]): Cloud agent assigned to this task.
     """
     
     id: int = Field(..., description="Unique task identifier")
@@ -75,6 +98,7 @@ class Task(TaskBase):
             "example": {
                 "id": 1,
                 "description": "Buy groceries",
-                "done": False
+                "done": False,
+                "agent": "cloud-agent-1"
             }
         }

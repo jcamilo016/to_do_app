@@ -24,18 +24,19 @@ class TaskDatabase:
         self._tasks: Dict[int, Task] = {}
         self._next_id: int = 1
     
-    def create_task(self, description: str, done: bool = False) -> Task:
+    def create_task(self, description: str, done: bool = False, agent: Optional[str] = None) -> Task:
         """
         Create a new task in the database.
         
         Parameters:
             description (str): The task description.
             done (bool): Initial completion status (default: False).
+            agent (Optional[str]): Cloud agent assigned to the task (default: None).
         
         Returns:
             Task: The newly created task with assigned ID.
         """
-        task = Task(id=self._next_id, description=description, done=done)
+        task = Task(id=self._next_id, description=description, done=done, agent=agent)
         self._tasks[self._next_id] = task
         self._next_id += 1
         return task
@@ -82,11 +83,52 @@ class TaskDatabase:
             updated_task = Task(
                 id=task.id,
                 description=description,
-                done=task.done
+                done=task.done,
+                agent=task.agent
             )
             self._tasks[task_id] = updated_task
             return updated_task
         return None
+    
+    def delegate_task(
+        self,
+        task_id: int,
+        agent: str
+    ) -> Optional[Task]:
+        """
+        Delegate a task to a cloud agent.
+        
+        Parameters:
+            task_id (int): The unique identifier of the task.
+            agent (str): The name or identifier of the cloud agent.
+        
+        Returns:
+            Optional[Task]: The updated task if found, None otherwise.
+        """
+        task = self._tasks.get(task_id)
+        if task:
+            # Create a new Task instance with updated agent
+            updated_task = Task(
+                id=task.id,
+                description=task.description,
+                done=task.done,
+                agent=agent
+            )
+            self._tasks[task_id] = updated_task
+            return updated_task
+        return None
+    
+    def get_tasks_by_agent(self, agent: str) -> List[Task]:
+        """
+        Retrieve all tasks delegated to a specific agent.
+        
+        Parameters:
+            agent (str): The name or identifier of the cloud agent.
+        
+        Returns:
+            List[Task]: A list of tasks assigned to the specified agent.
+        """
+        return [task for task in self._tasks.values() if task.agent == agent]
     
     def delete_task(self, task_id: int) -> bool:
         """

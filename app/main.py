@@ -10,7 +10,7 @@ from typing import List
 from fastapi import FastAPI, HTTPException, status
 from fastapi.responses import JSONResponse
 
-from app.models import Task, TaskCreate, TaskUpdate
+from app.models import Task, TaskCreate, TaskUpdate, TaskDelegate
 from app.database import task_db
 
 
@@ -53,11 +53,11 @@ async def create_task(task: TaskCreate) -> Task:
     
     This endpoint creates a new task with the provided description
     and completion status. The task is assigned a unique ID
-    automatically.
+    automatically. Optionally, a cloud agent can be assigned.
     
     Parameters:
-        task (TaskCreate): The task data including description
-                           and optional done status.
+        task (TaskCreate): The task data including description,
+                           optional done status, and optional agent.
     
     Returns:
         Task: The newly created task with assigned ID.
@@ -67,7 +67,8 @@ async def create_task(task: TaskCreate) -> Task:
     """
     new_task = task_db.create_task(
         description=task.description,
-        done=task.done
+        done=task.done,
+        agent=task.agent
     )
     return new_task
 
@@ -162,6 +163,70 @@ async def delete_task(id: int) -> None:
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Task with id {id} not found"
         )
+
+
+@app.put(
+    "/tasks/{id}/delegate",
+    response_model=Task,
+    status_code=status.HTTP_200_OK,
+    tags=["Tasks"],
+    summary="Delegate task to cloud agent",
+    response_description="The task with updated agent assignment"
+)
+async def delegate_task(id: int, task_delegate: TaskDelegate) -> Task:
+    """
+    Delegate a task to a cloud agent.
+    
+    This endpoint assigns a cloud agent to an existing task,
+    allowing the task to be delegated for processing.
+    
+    Parameters:
+        id (int): The unique identifier of the task to delegate.
+        task_delegate (TaskDelegate): Object containing the agent identifier.
+    
+    Returns:
+        Task: The updated task with the assigned cloud agent.
+    
+    Raises:
+        HTTPException: 404 error if the task is not found.
+    """
+    updated_task = task_db.delegate_task(
+        task_id=id,
+        agent=task_delegate.agent
+    )
+    
+    if updated_task is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Task with id {id} not found"
+        )
+    
+    return updated_task
+
+
+@app.get(
+    "/tasks/agent/{agent}",
+    response_model=List[Task],
+    status_code=status.HTTP_200_OK,
+    tags=["Tasks"],
+    summary="Get tasks by agent",
+    response_description="List of tasks assigned to the specified agent"
+)
+async def get_tasks_by_agent(agent: str) -> List[Task]:
+    """
+    Retrieve all tasks delegated to a specific cloud agent.
+    
+    This endpoint returns a list of all tasks currently assigned
+    to the specified cloud agent.
+    
+    Parameters:
+        agent (str): The identifier of the cloud agent.
+    
+    Returns:
+        List[Task]: A list containing all tasks assigned to the agent.
+    """
+    tasks = task_db.get_tasks_by_agent(agent=agent)
+    return tasks
 
 
 @app.exception_handler(Exception)
