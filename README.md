@@ -7,6 +7,7 @@ A simple and elegant REST API built with FastAPI for managing to-do tasks. This 
 - ✅ Create new tasks
 - ✅ List all tasks
 - ✅ Update task descriptions
+- ✅ Mark tasks as done
 - ✅ Delete tasks
 - ✅ Automatic Swagger/OpenAPI documentation
 - ✅ Proper HTTP status codes and error handling
@@ -232,7 +233,39 @@ Invoke-RestMethod -Uri "http://localhost:8000/tasks/1/description" `
 
 ---
 
-### 4. Delete a task
+### 4. Mark a task as done
+
+**Endpoint**: `PATCH /tasks/{id}/done`
+
+**Response** (200 OK):
+```json
+{
+  "id": 1,
+  "description": "Buy groceries",
+  "done": true
+}
+```
+
+**Error Response** (404 Not Found):
+```json
+{
+  "detail": "Task with id 999 not found"
+}
+```
+
+**cURL Example**:
+```bash
+curl -X PATCH "http://localhost:8000/tasks/1/done"
+```
+
+**PowerShell Example**:
+```powershell
+Invoke-RestMethod -Uri "http://localhost:8000/tasks/1/done" -Method PATCH
+```
+
+---
+
+### 5. Delete a task
 
 **Endpoint**: `DELETE /tasks/{id}`
 
@@ -282,10 +315,13 @@ $updated = Invoke-RestMethod -Uri "http://localhost:8000/tasks/1/description" `
   -Method PUT -ContentType "application/json" `
   -Body '{"description": "Buy groceries and cook dinner"}'
 
-# 4. Delete a task
+# 4. Mark a task as done
+$done = Invoke-RestMethod -Uri "http://localhost:8000/tasks/1/done" -Method PATCH
+
+# 5. Delete a task
 Invoke-RestMethod -Uri "http://localhost:8000/tasks/2" -Method DELETE
 
-# 5. Verify deletion
+# 6. Verify remaining tasks
 $remainingTasks = Invoke-RestMethod -Uri "http://localhost:8000/tasks/" -Method GET
 $remainingTasks | ConvertTo-Json
 ```
@@ -309,10 +345,13 @@ curl -X PUT "http://localhost:8000/tasks/1/description" \
   -H "Content-Type: application/json" \
   -d '{"description": "Buy groceries and cook dinner"}'
 
-# 4. Delete a task
+# 4. Mark a task as done
+curl -X PATCH "http://localhost:8000/tasks/1/done"
+
+# 5. Delete a task
 curl -X DELETE "http://localhost:8000/tasks/2"
 
-# 5. Verify deletion
+# 6. Verify remaining tasks
 curl -X GET "http://localhost:8000/tasks/"
 ```
 
@@ -320,7 +359,7 @@ curl -X GET "http://localhost:8000/tasks/"
 
 The API uses the following HTTP status codes:
 
-- `200 OK`: Successful GET or PUT request
+- `200 OK`: Successful GET, PUT, or PATCH request
 - `201 Created`: Successful POST request (task created)
 - `204 No Content`: Successful DELETE request
 - `404 Not Found`: Task with specified ID doesn't exist
@@ -348,7 +387,6 @@ Potential improvements for production use:
 
 - Add persistent database (PostgreSQL, MongoDB, etc.)
 - Implement user authentication and authorization
-- Add task completion toggle endpoint (PUT /tasks/{id}/done)
 - Add task filtering and sorting capabilities
 - Add pagination for large task lists
 - Add task priority and due date fields

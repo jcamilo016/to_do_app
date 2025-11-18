@@ -88,6 +88,28 @@ class TaskDatabase:
             return updated_task
         return None
     
+    def mark_task_as_done(self, task_id: int) -> Optional[Task]:
+        """
+        Mark a task as done.
+        
+        Parameters:
+            task_id (int): The unique identifier of the task.
+        
+        Returns:
+            Optional[Task]: The updated task if found, None otherwise.
+        """
+        task = self._tasks.get(task_id)
+        if task:
+            # Create a new Task instance with done status set to True
+            updated_task = Task(
+                id=task.id,
+                description=task.description,
+                done=True
+            )
+            self._tasks[task_id] = updated_task
+            return updated_task
+        return None
+    
     def delete_task(self, task_id: int) -> bool:
         """
         Delete a task from the database.
